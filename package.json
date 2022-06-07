@@ -1,0 +1,17 @@
+{
+  "name": "lyra_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Will Schiller",
+  "license": "ISC",
+  "dependencies": {
+    "@lyrafinance/lyra-js": "0.0.13"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.3"
+  }
+}
