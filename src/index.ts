@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { Telegraf } from 'telegraf'
 import 'dotenv/config';
 import Lyra from '@lyrafinance/lyra-js'
-import Fauna from './fauna';
 const faunadb = require('faunadb') 
 
 
@@ -10,6 +9,7 @@ export default async function bot() {
 
   //INIT
   const bot = new Telegraf(process.env.TELEGRAM_TOKEN)
+  const lyra = new Lyra();
   const client = new faunadb.Client({
     secret: process.env.FAUNA_TOKEN,
     domain: 'db.fauna.com',
@@ -17,7 +17,16 @@ export default async function bot() {
     scheme: 'https',
   })
   const q = faunadb.query
-  const lyra = new Lyra();
+  
+  async function PushToDB(data: object) {
+    let query = client.query(
+      q.Create(
+        q.Collection('test'),
+        { data: data }
+      )
+    )
+    query.then(response => response)
+  }
 
   bot.start((ctx) => {ctx.reply('Welcome to Lyra Liquidation Alert Tool')})
   bot.help((ctx) => {ctx.reply('Use /track [Your-ethereum account] to check orders')})
@@ -26,7 +35,7 @@ export default async function bot() {
     let account = ctx.message.text.split(' ')[1]
     let positions = await lyra.openPositions(account)
     //Saves data to Fauna
-    let x = positions.map(pos => (Fauna({
+    let x = positions.map(pos => (PushToDB({
       id: pos.id,
       owner: pos.owner,
       marketName: pos.marketName,
@@ -49,6 +58,8 @@ export default async function bot() {
     })))
     ctx.reply('test')
   });
+
+
 
   bot.launch()
 
