@@ -1,41 +1,23 @@
 import 'dotenv/config';
-import { Telegraf } from 'telegraf'
-import 'dotenv/config';
-import Lyra from '@lyrafinance/lyra-js'
-const faunadb = require('faunadb') 
+import { Context, Telegraf } from 'telegraf'
+import Lyra, { Account } from '@lyrafinance/lyra-js'
+import {PushToDB, checkIndexById} from './queries';
 
 
 export default async function bot() {
-
-  //INIT
+  
   const bot = new Telegraf(process.env.TELEGRAM_TOKEN)
   const lyra = new Lyra();
-  const client = new faunadb.Client({
-    secret: process.env.FAUNA_TOKEN,
-    domain: 'db.fauna.com',
-    port: 443,
-    scheme: 'https',
-  })
-  const q = faunadb.query
-  
-  async function PushToDB(data: object) {
-    let query = client.query(
-      q.Create(
-        q.Collection('test'),
-        { data: data }
-      )
-    )
-    query.then(response => response)
-  }
 
   bot.start((ctx) => {ctx.reply('Welcome to Lyra Liquidation Alert Tool')})
   bot.help((ctx) => {ctx.reply('Use /track [Your-ethereum account] to check orders')})
 
   bot.command('test', async (ctx) => {
     let account = ctx.message.text.split(' ')[1]
-    let positions = await lyra.openPositions(account)
-    //Saves data to Fauna
-    let x = positions.map(pos => (PushToDB({
+    let response = await lyra.openPositions(account)
+
+
+    let positions = response.map(pos => (({
       id: pos.id,
       owner: pos.owner,
       marketName: pos.marketName,
@@ -56,9 +38,18 @@ export default async function bot() {
       unrealizedPnlPercent: pos.unrealizedPnlPercent(),
       expiryTimestamp: pos.expiryTimestamp,
     })))
-    ctx.reply('test')
-  });
+   positions.map( async pos => {
+     let isIndexed = await checkIndexById(pos.id);
+     
+     if (isIndexed) {
+      ctx.reply(`ORDER: ${pos.id} IS ALREADY BEING TRACKED`)
 
+      
+     } else {
+      PushToDB(pos.owner, pos.id, pos)
+      ctx.reply(`TRACKING ORDER: ${pos.id}`)   }
+    })
+  });
 
 
   bot.launch()
