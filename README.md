@@ -1,15 +1,3 @@
 # Lyra Liquidation Alerts
 
-Work in Progress...
-
-## Getting Starting
-
-To start ```ts-node src/index.ts``` 
-
-## Tech Stack 
-
-* Node.js
-* TypeScript
-* Lyra.js
-* Telegraf.js
-
+***THIS REPO HAS MOVED TO:*** [https://github.com/Lyra-Grants/lyra-avalon-liquidation-alerts](https://github.com/Lyra-Grants/lyra-avalon-liquidation-alerts)
